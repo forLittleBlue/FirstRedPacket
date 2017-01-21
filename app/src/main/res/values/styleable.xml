@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <declare-styleable name="OvalView">
+        <attr name="oval_color" format="color"/>
+        <attr name="angle_ratio" format="float"/>
+    </declare-styleable>
+</resources>

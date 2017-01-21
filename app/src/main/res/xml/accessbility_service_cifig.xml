@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeNotificationStateChanged|typeWindowStateChanged|typeWindowContentChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:canRetrieveWindowContent="true"
+    android:notificationTimeout="100"
+    android:description="@string/description"
+    android:packageNames="com.tencent.mm">
+</accessibility-service>
+
+<!--
+也可以通过setServiceInfo(AccessibilityServiceInfo)为其配置信息,除此之外,通过该方法可以在运行期间动态修改服务配置.需要注意,
+该方法只能用来配置动态属性:eventTypes,feedbackType,flags,notificaionTimeout及packageNames.
+
+通常是在onServiceConnected()进行配置,如下代码:
+
+ @Override
+    protected void onServiceConnected() {
+        AccessibilityServiceInfo serviceInfo = new AccessibilityServiceInfo();
+        serviceInfo.eventTypes = AccessibilityEvent.TYPES_ALL_MASK;
+        serviceInfo.feedbackType = AccessibilityServiceInfo.FEEDBACK_GENERIC;
+        serviceInfo.packageNames = new String[]{"com.tencent.mm"};
+        serviceInfo.notificationTimeout=100;
+        setServiceInfo(serviceInfo);
+    }
+
+在这里涉及到了AccessibilityServiceInfo类,做个说明:
+1.AccessibilityServiceInfo该类被用于配置AccessibilityService信息,该类中包含了大量用于配置的常量字段及用来xml 属性,比如常见
+    的android:accessibilityEventTypes,android:canRequestFilterKeyEvents,android:packageNames等等
+2.accessibilityEventTypes:表示该服务对界面中的哪些变化感兴趣,即哪些事件通知,比如窗口打开,滑动,焦点变化,长按等.具体的值可以在
+    AccessibilityEvent类中查到,如typeAllMask表示接受所有的事件通知.
+3.accessibilityFeedbackType:表示反馈方式,比如是语音播放,还是震动
+4.canRetrieveWindowContent:表示该服务能否访问活动窗口中的内容.也就是如果你希望在服务中获取窗体内容的化,则需要设置其值为true.
+5.notificationTimeout:接受事件的时间间隔,通常将其设置为100即可.
+6.packageNames:表示对该服务是用来监听哪个包的产生的事件
+-->

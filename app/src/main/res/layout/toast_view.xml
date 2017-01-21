@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="@dimen/toast_view_width"
+    android:layout_height="@dimen/toast_view_heiht">
+
+    <littleblue.com.firstredpacket.OvalView
+        android:id="@+id/oval_view"
+        android:alpha="0.65"
+        android:layout_width="@dimen/toast_view_width"
+        android:layout_height="@dimen/toast_view_heiht"
+        app:oval_color="@color/glass_grey"
+        app:angle_ratio="0.9"/>
+
+    <TextView
+        android:gravity="center"
+        android:layout_width="@dimen/toast_view_width"
+        android:layout_height="@dimen/toast_view_heiht"
+        android:id="@+id/toast_textView"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textColor="@color/blue_light"
+        android:textStyle="bold"
+        android:textSize="18dp" />
+</RelativeLayout>
