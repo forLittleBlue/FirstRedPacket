@@ -10,6 +10,8 @@
 </accessibility-service>
 
 <!--
+android:accessibilityEventTypes="typeNotificationStateChanged|typeWindowStateChanged|typeWindowContentChanged"
+
 也可以通过setServiceInfo(AccessibilityServiceInfo)为其配置信息,除此之外,通过该方法可以在运行期间动态修改服务配置.需要注意,
 该方法只能用来配置动态属性:eventTypes,feedbackType,flags,notificaionTimeout及packageNames.
 

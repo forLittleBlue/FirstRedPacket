@@ -38,6 +38,7 @@ public class MainActivity extends AppCompatActivity {
         mStartButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                isAccSeviceEnabled = getServiceIsEnabled();
                 if (!isAccSeviceEnabled) {
                     Intent intent =  new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
                     startActivity(intent);

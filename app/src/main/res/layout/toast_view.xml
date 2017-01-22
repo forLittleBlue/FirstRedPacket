@@ -7,7 +7,7 @@
 
     <littleblue.com.firstredpacket.OvalView
         android:id="@+id/oval_view"
-        android:alpha="0.65"
+        android:alpha="0.55"
         android:layout_width="@dimen/toast_view_width"
         android:layout_height="@dimen/toast_view_heiht"
         app:oval_color="@color/glass_grey"
