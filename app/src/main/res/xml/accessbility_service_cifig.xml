@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
-    android:accessibilityEventTypes="typeNotificationStateChanged|typeWindowStateChanged|typeWindowContentChanged"
+    android:accessibilityEventTypes="typeAllMask"
     android:accessibilityFeedbackType="feedbackGeneric"
     android:accessibilityFlags="flagDefault"
     android:canRetrieveWindowContent="true"
@@ -11,6 +11,7 @@
 
 <!--
 android:accessibilityEventTypes="typeNotificationStateChanged|typeWindowStateChanged|typeWindowContentChanged"
+typeAllMask
 
 也可以通过setServiceInfo(AccessibilityServiceInfo)为其配置信息,除此之外,通过该方法可以在运行期间动态修改服务配置.需要注意,
 该方法只能用来配置动态属性:eventTypes,feedbackType,flags,notificaionTimeout及packageNames.

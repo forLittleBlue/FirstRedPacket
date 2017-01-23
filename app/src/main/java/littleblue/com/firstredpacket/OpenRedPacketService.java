@@ -27,7 +27,8 @@ public class OpenRedPacketService extends AccessibilityService {
     private static String TAG = "RedPacket.OpenService";
 
     private Context mContext;
-    private HashMap<String, Float> mNodeHashMap = new HashMap<>();//不能用list
+    private boolean isOnStateChange = false;
+    private HashMap<String, Integer> mNodeHashMap = new HashMap<>();//不能用list
     private static AccessibilityNodeInfo  mNode;
     private int mPacketInScreenY = 0;
     private int mOpendPacketInScreenY = 0;
@@ -74,16 +75,28 @@ public class OpenRedPacketService extends AccessibilityService {
                 break;
             case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
                 //Log.i(TAG, "CONTENT getClassName: " + event.getClassName());
+                if (isOnStateChange) break;
                 //break;
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
+
+                isOnStateChange = true;
                 String className = event.getClassName().toString();
                 Log.i(TAG, "STATE getClassName: " + className);
                 if (className.equals("com.tencent.mm.ui.LauncherUI")) {
-                    handleEvents();
+                    new Thread() {
+                        @Override
+                        public void run() {
+                            handleEvents(null, -1);
+                        }
+                    }.start();
                 } else if (className.endsWith("android.widget.TextView")) {
                     //mHandler.sendEmptyMessageDelayed(1, 1000);
-                    //handleEvents();
-                    simulateTouch();
+                    Log.i(TAG, " handleEvents mNode event.getRecord(0): " + event.getRecord(0));
+                    int recordItemCount = event.getRecord(0).getItemCount();
+                    Log.i(TAG, "findRedPacket recordItemCoun: " + recordItemCount);
+
+                    //handleEvents(event, recordItemCount);
+//                    simulateTouch();
                 } else if (className.equals("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI")) {
                     AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
                     if (nodeInfo != null) {
@@ -96,22 +109,16 @@ public class OpenRedPacketService extends AccessibilityService {
                         }
                     }
                 }
-
+                isOnStateChange = false;
                 break;
+            case AccessibilityEvent.TYPE_VIEW_SCROLLED:
+                //Log.i(TAG, "SCROLLE event: " + event);
 
         }
 
     }
 
-    private Handler mHandler = new Handler() {
-        @Override
-        public void handleMessage(Message msg) {
-            super.handleMessage(msg);
-            handleEvents();
-        }
-    };
-
-    private void handleEvents() {
+    private void handleEvents(AccessibilityEvent event, int recordItemCount) {
         AccessibilityNodeInfo rootNode = getRootInActiveWindow();
         //Log.i(TAG, "STATE rootNode: " + rootNode);
         if (rootNode != null) {
@@ -139,13 +146,14 @@ public class OpenRedPacketService extends AccessibilityService {
                 return;
             }
             Log.i(TAG, " handleEvents mNode isNot null");
+
             String nodeStr = mNode.toString();
             String nodeId = nodeStr.substring(49, 57);
-            if (mNodeHashMap.containsKey(nodeId)) {
+            if (mNodeHashMap.containsKey(nodeId) && mNodeHashMap.get(nodeId) == recordItemCount) {
                 Log.i(TAG, "findRedPacket this node has been added");
                 return;
             }
-            mNodeHashMap.put(nodeId, -1.0f);
+            mNodeHashMap.put(nodeId, recordItemCount);
 
             mNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             AccessibilityNodeInfo parent = mNode.getParent();
