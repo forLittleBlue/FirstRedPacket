@@ -58,7 +58,7 @@ public class MainActivity extends AppCompatActivity {
 
     private boolean getServiceIsEnabled() {
         boolean isEnabled = false;
-        AccessibilityManager abm = (AccessibilityManager) getSystemService(Context.ACCESSIBILITY_SERVICE);
+        /*AccessibilityManager abm = (AccessibilityManager) getSystemService(Context.ACCESSIBILITY_SERVICE);
         List<AccessibilityServiceInfo> serviceInfoList = abm.getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_GENERIC);
         for (AccessibilityServiceInfo serviceInfo : serviceInfoList) {
             Log.i(TAG, "AccessibilityServiceInfo : " + serviceInfo.getId());
@@ -66,6 +66,13 @@ public class MainActivity extends AppCompatActivity {
                 isEnabled = true;
                 break;
             }
+        }*/
+        //第二种方法
+        try {
+            isEnabled = Settings.Secure.getInt(mContext.getContentResolver(),
+                    android.provider.Settings.Secure.ACCESSIBILITY_ENABLED) == 1;
+        } catch (Settings.SettingNotFoundException e) {
+            Log.i(TAG, e.getMessage());
         }
         return isEnabled;
     }

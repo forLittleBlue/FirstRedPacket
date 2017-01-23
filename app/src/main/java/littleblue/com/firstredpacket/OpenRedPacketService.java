@@ -11,11 +11,15 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
+import android.os.SystemClock;
 import android.util.Log;
+import android.view.MotionEvent;
+import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
 import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Toast;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 
@@ -23,6 +27,10 @@ public class OpenRedPacketService extends AccessibilityService {
     private static String TAG = "RedPacket.OpenService";
 
     private Context mContext;
+    private HashMap<String, Float> mNodeHashMap = new HashMap<>();//不能用list
+    private static AccessibilityNodeInfo  mNode;
+    private int mPacketInScreenY = 0;
+    private int mOpendPacketInScreenY = 0;
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -59,42 +67,24 @@ public class OpenRedPacketService extends AccessibilityService {
                             } catch (PendingIntent.CanceledException e) {
                                 e.printStackTrace();
                             }
+                            mNodeHashMap.clear();
                         }
                     }
                 }
                 break;
             case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-                Log.i(TAG, "CONTENT getClassName: " + event.getClassName());
-//                break;
+                //Log.i(TAG, "CONTENT getClassName: " + event.getClassName());
+                //break;
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 String className = event.getClassName().toString();
                 Log.i(TAG, "STATE getClassName: " + className);
                 if (className.equals("com.tencent.mm.ui.LauncherUI")) {
                     handleEvents();
                 } else if (className.endsWith("android.widget.TextView")) {
-                    /*AccessibilityNodeInfo node = event.getSource();
-                    Log.i(TAG, " handleEvents node: " + node);
-                    if (node != null) {
-                        mNode = null;
-                        mPacketInScreenY = 0;
-                        mOpendPacketInScreenY = 0;
-                        findRedPacket(node);
-                        Log.i(TAG, " handleEvents mNode: " + mNode);
-                        if (mNode == null) break;
-                        mNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                        AccessibilityNodeInfo parent = mNode.getParent();
-                        while (parent != null) {
-                            if (parent.isClickable()) {
-                                parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
-                                break;
-                            }
-                            parent = parent.getParent();
-                        }
-                    }*/
-                    mHandler.sendEmptyMessageDelayed(1, 1000);
-                } else if (className.equals("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI")
-                        || className.equals("com.vivo.accessibilitytest.money.LuckyActivity")) {
-
+                    //mHandler.sendEmptyMessageDelayed(1, 1000);
+                    //handleEvents();
+                    simulateTouch();
+                } else if (className.equals("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyReceiveUI")) {
                     AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
                     if (nodeInfo != null) {
                         for (int i = 0; i < nodeInfo.getChildCount(); ++i) {
@@ -133,13 +123,30 @@ public class OpenRedPacketService extends AccessibilityService {
             //actionNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             //以上方法判断领取红包可能会造成失效
 
+            if (mNodeHashMap.size() > 0) {
+                for (String nodeId : mNodeHashMap.keySet()) {
+                    Log.i(TAG, " handleEvents mNodeHashMap.key : " + nodeId);
+                }
+            }
 
             mNode = null;
             mPacketInScreenY = 0;
             mOpendPacketInScreenY = 0;
             findRedPacket(rootNode);
-            Log.i(TAG, " handleEvents mNode: " + mNode);
-            if (mNode == null/* || mOpendPacketInScreenY > mPacketInScreenY*/) return;
+
+            if (mNode == null) {
+                Log.i(TAG, " handleEvents mNode is null");
+                return;
+            }
+            Log.i(TAG, " handleEvents mNode isNot null");
+            String nodeStr = mNode.toString();
+            String nodeId = nodeStr.substring(49, 57);
+            if (mNodeHashMap.containsKey(nodeId)) {
+                Log.i(TAG, "findRedPacket this node has been added");
+                return;
+            }
+            mNodeHashMap.put(nodeId, -1.0f);
+
             mNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             AccessibilityNodeInfo parent = mNode.getParent();
             //Log.i(TAG, "node.getParent(): " + parent);
@@ -153,10 +160,6 @@ public class OpenRedPacketService extends AccessibilityService {
         }
     }
 
-    private HashMap<String, Float> mNodeHashMap = new HashMap<>();//不能用list
-    private AccessibilityNodeInfo mNode;
-    private int mPacketInScreenY = 0;
-    private int mOpendPacketInScreenY = 0;
     /**
      * 递归查找当前聊天窗口中的红包信息
      *
@@ -174,7 +177,7 @@ public class OpenRedPacketService extends AccessibilityService {
                     String nodeStr = node.toString();
                     //int idStart = nodeStr.indexOf("@");//48
                     String nodeId = nodeStr.substring(49, 57);
-                    //Log.i(TAG, "findRedPacket nodeId: " + nodeId);
+                    Log.i(TAG, "*******findRedPacket nodeId: " + nodeId);
 
                     Rect outRect = new Rect();
                     node.getBoundsInScreen(outRect);
@@ -182,12 +185,7 @@ public class OpenRedPacketService extends AccessibilityService {
                         mPacketInScreenY = outRect.top;
                     }
                     Log.i(TAG, "findRedPacket packet outRect: " + outRect.toString());
-                    if (!mNodeHashMap.containsKey(nodeId)) {
-                        mNodeHashMap.put(nodeId, -1.0f);
-                        mNode = node;
-                    } else {
-                        mNode = null;
-                    }
+                    mNode = node;
                 } else if((node.getText().toString()).contains("你领取了")) {
                     mNode = null;
                     Rect outRect = new Rect();
@@ -206,6 +204,30 @@ public class OpenRedPacketService extends AccessibilityService {
 
             }
         }
+    }
+
+    private boolean isOurPhone = true;
+    private void simulateTouch() {
+        Log.i(TAG, "simulateTouch");
+        if (!isOurPhone) return;
+        try {
+            Process proc =Runtime.getRuntime().exec("input tap 545 2155");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void setSimulateClick(View view, float x, float y) {
+        long downTime = SystemClock.uptimeMillis();
+        final MotionEvent downEvent = MotionEvent.obtain(downTime, downTime,
+                MotionEvent.ACTION_DOWN, x, y, 0);
+        downTime += 1000;
+        final MotionEvent upEvent = MotionEvent.obtain(downTime, downTime,
+                MotionEvent.ACTION_UP, x, y, 0);
+        view.onTouchEvent(downEvent);
+        view.onTouchEvent(upEvent);
+        downEvent.recycle();
+        upEvent.recycle();
     }
 
     @Override
