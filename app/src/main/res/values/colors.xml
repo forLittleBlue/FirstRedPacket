@@ -5,4 +5,5 @@
     <color name="colorAccent">#FF4081</color>
     <color name="glass_grey">#BEBEBE</color>
     <color name="blue_light">#1c61db</color>
+    <color name="hint_color">#cfe2f3</color>
 </resources>

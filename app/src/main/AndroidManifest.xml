@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="littleblue.com.firstredpacket">
+    package="littleblue.com.autopacket">
 
     <uses-permission android:name="android.permission.INJECT_EVENTS" />
 
@@ -10,7 +10,7 @@
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity">
+        <activity android:name="littleblue.com.autopacket.MainActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -19,7 +19,7 @@
         </activity>
 
         <service
-            android:name=".OpenRedPacketService"
+            android:name="littleblue.com.autopacket.OpenRedPacketService"
             android:enabled="true"
             android:exported="true"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
@@ -32,7 +32,7 @@
                 android:resource="@xml/accessbility_service_cifig" />
         </service>
 
-        <activity android:name=".EmptyActivity"></activity>
+        <activity android:name="littleblue.com.autopacket.EmptyActivity"></activity>
     </application>
 
 </manifest>

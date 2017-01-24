@@ -5,7 +5,7 @@
     android:layout_width="@dimen/toast_view_width"
     android:layout_height="@dimen/toast_view_heiht">
 
-    <littleblue.com.firstredpacket.OvalView
+    <littleblue.com.autopacket.OvalView
         android:id="@+id/oval_view"
         android:alpha="0.55"
         android:layout_width="@dimen/toast_view_width"
@@ -17,6 +17,8 @@
         android:gravity="center"
         android:layout_width="@dimen/toast_view_width"
         android:layout_height="@dimen/toast_view_heiht"
+        android:paddingLeft="3dp"
+        android:paddingRight="3dp"
         android:id="@+id/toast_textView"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
         android:textColor="@color/blue_light"

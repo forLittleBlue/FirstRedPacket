@@ -5,11 +5,8 @@
     android:id="@+id/activity_main"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:paddingBottom="@dimen/activity_vertical_margin"
-    android:paddingLeft="@dimen/activity_horizontal_margin"
-    android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="littleblue.com.firstredpacket.MainActivity">
+    tools:context="littleblue.com.autopacket.MainActivity">
 
     <RelativeLayout
         android:layout_width="110dp"
@@ -17,7 +14,8 @@
         android:layout_marginTop="38dp"
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
-        android:gravity="center">
+        android:gravity="center"
+        android:id="@+id/relativeLayout">
 
         <Button
             android:text="启动"
@@ -30,7 +28,7 @@
             android:textSize="30dp"
             style="@style/Widget.AppCompat.Button.Borderless" />
 
-        <littleblue.com.firstredpacket.OvalView
+        <littleblue.com.autopacket.OvalView
             android:id="@+id/oval_view"
             android:alpha="0.45"
             android:foregroundGravity="center"
@@ -38,6 +36,94 @@
             android:layout_marginLeft="3dp"
             android:layout_width="106dp"
             android:layout_height="60dp"
+            app:oval_color="@color/glass_grey"
+            app:angle_ratio="2"/>
+
+    </RelativeLayout>
+
+    <Button
+        android:text="帮助.关于"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_about"
+        android:textColor="@color/blue_light"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="200dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true" />
+
+    <Button
+        android:text="@string/help_and_about_text"
+        android:layout_height="wrap_content"
+        android:id="@+id/button_about_text"
+        android:textColor="@color/blue_light"
+        style="@style/Widget.AppCompat.Button.Borderless"
+        android:layout_width="380dp"
+        android:layout_alignParentBottom="true"
+        android:layout_centerHorizontal="true"
+        android:layout_marginLeft="20dp"
+        android:gravity="left"
+        android:textSize="10dp"
+        android:textAllCaps="false"
+        android:alpha="0"
+        android:visibility="gone"/>
+
+    <EditText
+        android:id="@+id/editText_weixin_name"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:hint="点击输入"
+        android:textColorHint="@color/hint_color"
+        android:textStyle="bold"
+        android:textSize="25dp"
+        android:gravity="center_horizontal"
+        android:textColor="@color/blue_light"
+        android:background="@null"
+        android:textCursorDrawable="@null"
+        style="@style/Widget.AppCompat.AutoCompleteTextView"
+        android:layout_below="@+id/textView"
+        android:layout_centerHorizontal="true"
+        android:layout_marginTop="5dp" />
+
+    <TextView
+        android:text="微信昵称"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/textView"
+        android:textColor="@color/blue_light"
+        android:textSize="15dp"
+        android:alpha="0.6"
+        android:layout_marginTop="30dp"
+        android:layout_below="@+id/relativeLayout"
+        android:layout_centerHorizontal="true" />
+
+    <RelativeLayout
+        android:layout_width="100dp"
+        android:layout_height="40dp"
+        android:layout_marginTop="5dp"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/editText_weixin_name"
+        android:gravity="center"
+        android:id="@+id/relativeLayout_ok">
+
+        <Button
+            android:text="保存"
+            android:layout_height="match_parent"
+            android:layout_width="match_parent"
+            android:id="@+id/button_ok"
+            android:elevation="24dp"
+            android:textAppearance="@style/TextAppearance.AppCompat.Headline"
+            android:textColor="@color/blue_light"
+            android:textSize="15dp"
+            android:enabled="false"
+            style="@style/Widget.AppCompat.Button.Borderless" />
+
+        <littleblue.com.autopacket.OvalView
+            android:alpha="0.45"
+            android:foregroundGravity="center"
+            android:layout_marginTop="5dp"
+            android:layout_marginLeft="3dp"
+            android:layout_width="94dp"
+            android:layout_height="30dp"
             app:oval_color="@color/glass_grey"
             app:angle_ratio="2"/>
 

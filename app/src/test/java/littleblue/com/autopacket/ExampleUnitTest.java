@@ -1,4 +1,4 @@
-package littleblue.com.firstredpacket;
+package littleblue.com.autopacket;
 
 import org.junit.Test;
 
