@@ -57,7 +57,7 @@
         android:id="@+id/button_about_text"
         android:textColor="@color/blue_light"
         style="@style/Widget.AppCompat.Button.Borderless"
-        android:layout_width="380dp"
+        android:layout_width="280dp"
         android:layout_alignParentBottom="true"
         android:layout_centerHorizontal="true"
         android:layout_marginLeft="20dp"
@@ -71,7 +71,7 @@
         android:id="@+id/editText_weixin_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="点击输入"
+        android:hint="请输入"
         android:textColorHint="@color/hint_color"
         android:textStyle="bold"
         android:textSize="25dp"
@@ -103,6 +103,8 @@
         android:layout_centerHorizontal="true"
         android:layout_below="@+id/editText_weixin_name"
         android:gravity="center"
+        android:visibility="invisible"
+        android:alpha="0"
         android:id="@+id/relativeLayout_ok">
 
         <Button

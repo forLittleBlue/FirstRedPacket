@@ -12,6 +12,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.RelativeLayout;
@@ -73,7 +74,6 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        mEditOkView.setVisibility(View.INVISIBLE);
         OpenRedPacketService.mWeiXinName = Utils.getWeiXinName(mContext);
         final boolean isSaved = !OpenRedPacketService.mWeiXinName.equals(Utils.NO_INPUT);
         if (isSaved) {
@@ -82,7 +82,7 @@ public class MainActivity extends AppCompatActivity {
             mWeixinNameEdit.setText(OpenRedPacketService.mWeiXinName);
         } else {
             mEditOkButton.setEnabled(false);
-            mEditOkView.setAlpha(0.5f);
+            //mEditOkView.setAlpha(0.5f);
         }
         mWeixinNameEdit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -90,7 +90,9 @@ public class MainActivity extends AppCompatActivity {
                 Log.i(TAG, "mWeixinNameEdit onClick");
                 mEditOkView.setVisibility(View.VISIBLE);
                 mWeixinNameEdit.setCursorVisible(true);
-                ObjectAnimator alphaText = ObjectAnimator.ofFloat(mEditOkView, "alpha", 0.0f, isSaved ? 1.0f : 0.5f);
+                if (mEditOkView.getAlpha() > 0) return;
+                boolean saved = mWeixinNameEdit.getText().length() > 0;
+                ObjectAnimator alphaText = ObjectAnimator.ofFloat(mEditOkView, "alpha", 0.0f, saved ? 1.0f : 0.5f);
                 ObjectAnimator yText = ObjectAnimator.ofFloat(mEditOkView, "translationY", 200, 0);
                 AnimatorSet set = new AnimatorSet();
                 set.play(alphaText).with(yText);
@@ -124,6 +126,7 @@ public class MainActivity extends AppCompatActivity {
                 if (name.length() > 0) {
                     Utils.saveWeiXinName(mContext, name);
                     OpenRedPacketService.mWeiXinName = name;
+                    Utils.showToastView(mContext, "微信昵称保存成功", Toast.LENGTH_SHORT);
                 }
                 mWeixinNameEdit.setCursorVisible(false);
                 ObjectAnimator alphaText = ObjectAnimator.ofFloat(mEditOkView, "alpha", 1.0f, 0.0f);
@@ -131,6 +134,9 @@ public class MainActivity extends AppCompatActivity {
                 AnimatorSet set = new AnimatorSet();
                 set.play(alphaText).with(yText);
                 set.setDuration(800).start();
+
+                InputMethodManager imm = (InputMethodManager) getSystemService(Context.INPUT_METHOD_SERVICE);
+                imm.hideSoftInputFromWindow(v.getWindowToken(), 0);
             }
         });
 
@@ -139,7 +145,7 @@ public class MainActivity extends AppCompatActivity {
     @Override
     public boolean dispatchTouchEvent(MotionEvent ev) {
         if(ev.getAction()==MotionEvent.ACTION_DOWN){
-            if (mAboutTextButton.getAlpha() != 0) {
+            if (mAboutTextButton.getAlpha() == 1.0f) {
                 aboutTextDispear();
             }
         }

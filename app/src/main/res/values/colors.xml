@@ -2,7 +2,7 @@
 <resources>
     <color name="colorPrimary">#3F51B5</color>
     <color name="colorPrimaryDark">#303f9f</color>
-    <color name="colorAccent">#FF4081</color>
+    <color name="colorAccent">#BEBEBE</color><!--EditText 光标柄颜色可以更改-->
     <color name="glass_grey">#BEBEBE</color>
     <color name="blue_light">#1c61db</color>
     <color name="hint_color">#cfe2f3</color>
