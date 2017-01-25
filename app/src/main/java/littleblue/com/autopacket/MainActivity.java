@@ -12,6 +12,7 @@ import android.text.TextWatcher;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.accessibility.AccessibilityManager;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
@@ -51,9 +52,12 @@ public class MainActivity extends AppCompatActivity {
                 if (!isAccSeviceEnabled) {
                     Intent intent =  new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
                     startActivity(intent);
-                    Utils.showToastView(mContext, "在本界面开启"+ getString(R.string.app_name) +"的服务", Toast.LENGTH_LONG);
+                    Utils.showToastView(mContext,  getString(R.string.toast_for_start_service, getString(R.string.app_name)), Toast.LENGTH_LONG);
                 } else {
-                    Utils.showToastView(mContext, "服务已启动，请尽情享受", Toast.LENGTH_SHORT);
+
+                    Intent intent =  new Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS);
+                    startActivity(intent);
+                    Utils.showToastView(mContext, getString(R.string.toast_restart_service, getString(R.string.app_name)), Toast.LENGTH_LONG);
                 }
             }
         });
@@ -126,7 +130,7 @@ public class MainActivity extends AppCompatActivity {
                 if (name.length() > 0) {
                     Utils.saveWeiXinName(mContext, name);
                     OpenRedPacketService.mWeiXinName = name;
-                    Utils.showToastView(mContext, "微信昵称保存成功", Toast.LENGTH_SHORT);
+                    Utils.showToastView(mContext, getString(R.string.weixin_name_saved_toast), Toast.LENGTH_SHORT);
                 }
                 mWeixinNameEdit.setCursorVisible(false);
                 ObjectAnimator alphaText = ObjectAnimator.ofFloat(mEditOkView, "alpha", 1.0f, 0.0f);
@@ -140,6 +144,8 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        startService(new Intent(this, ImplService.class));
+        startService(new Intent(this, RemoteService.class));
     }
 
     @Override
@@ -168,6 +174,11 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         isAccSeviceEnabled = getServiceIsEnabled();
+        if (isAccSeviceEnabled) {
+            mStartButton.setText(getString(R.string.restart_service));
+        } else {
+            mStartButton.setText(getString(R.string.start_service));
+        }
     }
 
     private boolean getServiceIsEnabled() {

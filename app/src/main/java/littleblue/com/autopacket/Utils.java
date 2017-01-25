@@ -16,10 +16,22 @@ import android.widget.Toast;
 public class Utils {
     private static final String TAG = "RedPacket.Utils";
 
+    private static boolean DEBUG = true;
     private static final String PRF = "LittleBlue";
     private static final String KEY_WEIXIN_NAME = "weixin_name";
     public static final String NO_INPUT = "NO_INPUT(@-021)";
 
+    public static void logI(String TAG, String msg) {
+        if (DEBUG) {
+            Log.i(TAG, msg);
+        }
+    }
+
+    public static void logE(String TAG, String msg) {
+        if (DEBUG) {
+            Log.e(TAG, msg);
+        }
+    }
 
     public static void showToastView(Context context, String msg, int time) {
         final View toastView = LayoutInflater.from(context).inflate(R.layout.toast_view, null);

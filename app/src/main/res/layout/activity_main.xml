@@ -18,7 +18,7 @@
         android:id="@+id/relativeLayout">
 
         <Button
-            android:text="启动"
+            android:text="@string/start_service"
             android:layout_height="match_parent"
             android:layout_width="match_parent"
             android:id="@+id/button_start"
@@ -42,7 +42,7 @@
     </RelativeLayout>
 
     <Button
-        android:text="帮助.关于"
+        android:text="@string/help_and_about"
         android:layout_height="wrap_content"
         android:id="@+id/button_about"
         android:textColor="@color/blue_light"
@@ -71,7 +71,7 @@
         android:id="@+id/editText_weixin_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:hint="请输入"
+        android:hint="@string/weixin_name_edit_hint"
         android:textColorHint="@color/hint_color"
         android:textStyle="bold"
         android:textSize="25dp"
@@ -85,7 +85,7 @@
         android:layout_marginTop="5dp" />
 
     <TextView
-        android:text="微信昵称"
+        android:text="@string/weixin_name"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:id="@+id/textView"
@@ -108,7 +108,7 @@
         android:id="@+id/relativeLayout_ok">
 
         <Button
-            android:text="保存"
+            android:text="@string/save"
             android:layout_height="match_parent"
             android:layout_width="match_parent"
             android:id="@+id/button_ok"

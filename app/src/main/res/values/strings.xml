@@ -1,8 +1,20 @@
-<resources>
+<resources xmlns:xliff="urn:oasis:names:tc:xliff:document:1.2">
     <string name="app_name">小蓝抢红包</string>
     <string name="description">开启即可自动抢红包</string>
+    <string name="start_service">启动</string>
+    <string name="restart_service">重启</string>
+    <string name="help_and_about">帮助.关于</string>
+    <string name="weixin_name">微信昵称</string>
+    <string name="weixin_name_edit_hint">请输入</string>
+    <string name="save">保存</string>
     <string name="help_and_about_text">启动：在设置中"无障碍"或"辅助功能"界面开启服务。
         \n微信昵称：本人的微信昵称，有助于抢红包准确提示。
         \n关于：基于微信6.5.4，适用于简体中文。
         \nBy [LittleBlue-xieqingyu]364740623 2017.1.24</string>
+    <string name="weixin_name_saved_toast">微信昵称保存成功</string>
+    <string name="toast_after_start">服务已启动，请尽情享受</string>
+    <string name="toast_restart_service">在本界面关闭再开启<xliff:g id="APP_NAME">%1$s</xliff:g>的服务</string>
+    <string name="toast_for_start_service">在本界面开启<xliff:g id="APP_NAME">%1$s</xliff:g>的服务</string>
+    <string name="notification_restart_srvice_title">小蓝告诉你</string>
+    <string name="notification_restart_srvice_content">可能不能抢红包了，“小蓝抢红包”需要重启一下服务</string>
 </resources>

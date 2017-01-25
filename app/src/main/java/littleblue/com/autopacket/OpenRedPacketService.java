@@ -1,13 +1,19 @@
 package littleblue.com.autopacket;
 
 import android.accessibilityservice.AccessibilityService;
+import android.app.KeyguardManager;
 import android.app.Notification;
 import android.app.PendingIntent;
+import android.content.BroadcastReceiver;
 import android.content.Context;
+import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
+import android.os.PowerManager;
 import android.os.SystemClock;
+import android.text.format.DateUtils;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -32,10 +38,16 @@ public class OpenRedPacketService extends AccessibilityService {
     private int mResultCount = 0;
     private int mRanking = -1;
     private final int GLOBAL_ACTION_BACK_MSG = 1;
+    private final int SHOW_IM_RUN = 2;
+    private final int LOCK_KEYGUARD = 3;
     private String mLastResultText = "";
     private PacketResultInfo mPacketResultInfo;
     private static String mNodeId = "0";
     public static String mWeiXinName;
+    public static final String ACTION_IS_SERVICE_RUN = "littleBlue.action_is_service_run";
+    private KeyguardManager mKeyguardManager;
+    private PowerManager mPowerManager;
+    private AccessibilityEvent mKeyguardEvent;
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -61,30 +73,37 @@ public class OpenRedPacketService extends AccessibilityService {
                 if (textList.isEmpty()) break;
                 for (CharSequence charSequence : textList) {
                     String textString = charSequence.toString();
-                    Log.i(TAG, "Notification charSequence: " + textString);
+                    Utils.logI(TAG, "Notification charSequence: " + textString);
                     //如果微信红包的提示信息,则模拟点击进入相应的聊天窗口
                     if (textString.contains("[微信红包]")) {
                         if (event.getParcelableData() != null && event.getParcelableData() instanceof Notification) {
-                            Notification notification = (Notification) event.getParcelableData();
-                            PendingIntent pendingIntent = notification.contentIntent;
-                            try {
-                                pendingIntent.send();
-                            } catch (PendingIntent.CanceledException e) {
-                                e.printStackTrace();
-                            }
                             mNodeHashMap.clear();
+                            boolean isInKeyguard = mKeyguardManager.isKeyguardLocked();//判断是否为锁屏
+                            if (isInKeyguard) {
+                                Utils.logI(TAG, "Notification in keyguard");
+                                mKeyguardEvent = event;
+                                isOpenInKeyguard = true;
+
+//                                openInKeyguard();
+                                Intent intent = new Intent("OPEN_IN_KEYGUARD");
+                                sendBroadcast(intent);
+                                sendNotifiactionIntent(event);
+                                mHandler.sendEmptyMessageDelayed(LOCK_KEYGUARD, 3000);
+                            } else {
+                                sendNotifiactionIntent(event);
+                            }
                         }
                     }
                 }
                 break;
             case AccessibilityEvent.TYPE_WINDOW_CONTENT_CHANGED:
-                //Log.i(TAG, "CONTENT getClassName: " + event.getClassName());
+                //Utils.logI(TAG, "CONTENT getClassName: " + event.getClassName());
                 if (isOnStateChange) break;
                 //break;
             case AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED:
                 isOnStateChange = true;
                 String className = event.getClassName().toString();
-                Log.i(TAG, "STATE getClassName: " + className);
+                Utils.logI(TAG, "STATE getClassName: " + className);
                 if (className.equals("com.tencent.mm.ui.LauncherUI")) {
                     mHandler.removeMessages(GLOBAL_ACTION_BACK_MSG);
                     handleEvents();
@@ -106,17 +125,38 @@ public class OpenRedPacketService extends AccessibilityService {
                     mPacketResultInfo.time = System.currentTimeMillis();
                     AccessibilityNodeInfo nodeInfo = getRootInActiveWindow();
                     getPacketResult(nodeInfo);
-                    Log.i(TAG, "Pakcket result: " + mPacketResultInfo.toString());
+                    Utils.logI(TAG, "Pakcket result: " + mPacketResultInfo.toString());
                     dealForResult(mPacketResultInfo);
-                    mHandler.sendEmptyMessageDelayed(GLOBAL_ACTION_BACK_MSG, 2000);
+                    mHandler.sendEmptyMessageDelayed(GLOBAL_ACTION_BACK_MSG, 500);
                 }
                 isOnStateChange = false;
                 break;
-            case AccessibilityEvent.TYPE_VIEW_SCROLLED:
-                //Log.i(TAG, "SCROLLE event: " + event);
-
         }
 
+    }
+
+    private boolean isOpenInKeyguard = false;
+    private void openInKeyguard() {
+        isOpenInKeyguard = true;
+        //屏幕解锁
+        KeyguardManager.KeyguardLock kl = mKeyguardManager.newKeyguardLock("unLock");
+        kl.disableKeyguard();
+
+        //屏幕唤醒
+        PowerManager.WakeLock wl = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP
+                | PowerManager.SCREEN_DIM_WAKE_LOCK, "bright");
+        wl.acquire();
+        wl.release();
+    }
+
+    private void sendNotifiactionIntent(AccessibilityEvent event) {
+        Notification notification = (Notification) event.getParcelableData();
+        PendingIntent pendingIntent = notification.contentIntent;
+        try {
+            pendingIntent.send();
+        } catch (PendingIntent.CanceledException e) {
+            e.printStackTrace();
+        }
     }
 
     private Handler mHandler = new Handler() {
@@ -125,6 +165,15 @@ public class OpenRedPacketService extends AccessibilityService {
             switch (msg.what) {
                 case GLOBAL_ACTION_BACK_MSG:
                     performGlobalAction(GLOBAL_ACTION_BACK);
+                    break;
+                case SHOW_IM_RUN:
+                    Intent intent = new Intent(ACTION_IS_SERVICE_RUN);
+                    sendBroadcast(intent);
+                    mHandler.sendEmptyMessageDelayed(SHOW_IM_RUN, 5*DateUtils.SECOND_IN_MILLIS);
+                    break;
+                case LOCK_KEYGUARD:
+                    Intent intent2 = new Intent("REENABLE_KEYGUARD");
+                    sendBroadcast(intent2);
                     break;
             }
         }
@@ -135,9 +184,9 @@ public class OpenRedPacketService extends AccessibilityService {
         if (rootNode != null) {
 //                        List<AccessibilityNodeInfo> nodeInfos = rootNode.findAccessibilityNodeInfosByText("领取红包");
 //                        AccessibilityNodeInfo lastNode = nodeInfos.get(nodeInfos.size() - 1);
-//                        Log.i(TAG, "findAccessibilityNodeInfosByText, lastNode: " + lastNode);
+//                        Utils.logI(TAG, "findAccessibilityNodeInfosByText, lastNode: " + lastNode);
 //                        AccessibilityNodeInfo actionNode = lastNode.getParent();
-//                        Log.i(TAG, "node.getParent()actionNode: " + actionNode);
+//                        Utils.logI(TAG, "node.getParent()actionNode: " + actionNode);
             //actionNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             //以上方法判断领取红包可能会造成失效
 
@@ -147,22 +196,22 @@ public class OpenRedPacketService extends AccessibilityService {
             findRedPacket(rootNode);
 
             if (mNode == null) {
-                Log.i(TAG, " handleEvents mNode is null");
+                Utils.logI(TAG, " handleEvents mNode is null");
                 return;
             }
-            Log.i(TAG, " handleEvents mNode isNot null");
+            Utils.logI(TAG, " handleEvents mNode isNot null");
 
             String nodeStr = mNode.toString();
             mNodeId = nodeStr.substring(49, 57);
             if (mNodeHashMap.containsKey(mNodeId) && mNodeHashMap.get(mNodeId) == mPacketInScreenY) {
-                Log.i(TAG, "findRedPacket this node has been added");
+                Utils.logI(TAG, "findRedPacket this node has been added");
                 return;
             }
             mNodeHashMap.put(mNodeId, mPacketInScreenY);
 
             mNode.performAction(AccessibilityNodeInfo.ACTION_CLICK);
             AccessibilityNodeInfo parent = mNode.getParent();
-            //Log.i(TAG, "node.getParent(): " + parent);
+            //Utils.logI(TAG, "node.getParent(): " + parent);
             while (parent != null) {
                 if (parent.isClickable()) {
                     parent.performAction(AccessibilityNodeInfo.ACTION_CLICK);
@@ -185,20 +234,20 @@ public class OpenRedPacketService extends AccessibilityService {
         if (node.getChildCount() == 0) {
             if (node.getText() != null) {
                 String nodeText = node.getText().toString();
-//                Log.i(TAG, "findRedPacket: " + nodeText);
+                //Utils.logI(TAG, "findRedPacket: " + nodeText);
                 if ("领取红包".equals(nodeText)) {
-                    //Log.i(TAG, "findRedPacket node: " + node);
+                    //Utils.logI(TAG, "findRedPacket node: " + node);
                     //String nodeStr = node.toString();
                     //int idStart = nodeStr.indexOf("@");//48
                     //String nodeId = nodeStr.substring(49, 57);
-                    //Log.i(TAG, "*******findRedPacket nodeId: " + nodeId);
+                    //Utils.logI(TAG, "*******findRedPacket nodeId: " + nodeId);
 
                     Rect outRect = new Rect();
                     node.getBoundsInScreen(outRect);
                     if (outRect.top > mPacketInScreenY) {
                         mPacketInScreenY = outRect.top;
                     }
-                    Log.i(TAG, "findRedPacket packet outRect: " + outRect.toString());
+                    Utils.logI(TAG, "findRedPacket packet outRect: " + outRect.toString());
                     mNode = node;
                 } else if(nodeText.contains("你领取了")) {
                     mNode = null;
@@ -207,7 +256,7 @@ public class OpenRedPacketService extends AccessibilityService {
                     if (outRect.top > mOpendPacketInScreenY) {
                         mOpendPacketInScreenY = outRect.top;
                     }
-                    Log.i(TAG, "findRedPacket opend outRect: " + outRect.toString());
+                    Utils.logI(TAG, "findRedPacket opend outRect: " + outRect.toString());
                 }
             }
         } else {
@@ -229,6 +278,10 @@ public class OpenRedPacketService extends AccessibilityService {
                 if ("android.widget.Button".equals(info.getClassName())) {
                     info.performAction(AccessibilityNodeInfo.ACTION_CLICK);//打开红包
                     isOnOpen = true;
+                    if (isOpenInKeyguard) {
+                        mHandler.sendEmptyMessage(LOCK_KEYGUARD);
+                        isOpenInKeyguard = false;
+                    }
                     break;
                 }
             }
@@ -241,7 +294,7 @@ public class OpenRedPacketService extends AccessibilityService {
             if (node.getChildCount() == 0) {
                 if (node.getText() != null) {
                     String nodeText = node.getText().toString();
-                    Log.i(TAG, "getPacketResult: " + nodeText);
+                    Utils.logI(TAG, "getPacketResult: " + nodeText);
                     if (mResultCount == 0) {
                         mPacketResultInfo.packetName = nodeText;
                         mResultCount = 1;//微信6.5.4版本
@@ -249,11 +302,11 @@ public class OpenRedPacketService extends AccessibilityService {
                         mPacketResultInfo.isSuccessed = true;
                         mPacketResultInfo.myMoney = mLastResultText;//金额
                     } else if(nodeText.equals(mWeiXinName) && mResultCount == 1) {
-                        Log.i(TAG, "getPacketResult: mWeiXinName" );
+                        Utils.logI(TAG, "getPacketResult: mWeiXinName" );
                         mResultCount = 2;
                         mRanking = 1;
                     } else if (nodeText.equals("手气最佳") && mResultCount == 2) {
-                        Log.i(TAG, "getPacketResult: luckiest" );
+                        Utils.logI(TAG, "getPacketResult: luckiest" );
                         mPacketResultInfo.luckiest = nodeText;
                         mResultCount = -1;
                     } else if (mResultCount == -1 && mRanking == 1) {
@@ -262,7 +315,7 @@ public class OpenRedPacketService extends AccessibilityService {
                         }
                     }
                     if (nodeText.equals("查看我的红包记录")) {
-                        Log.i(TAG, "getPacketResult: nodeText.equals(\"查看我的红包记录\")" );
+                        Utils.logI(TAG, "getPacketResult: nodeText.equals(\"查看我的红包记录\")" );
                         mPacketResultInfo.ranking = mRanking;
                     }
                     mLastResultText = nodeText;
@@ -319,7 +372,7 @@ public class OpenRedPacketService extends AccessibilityService {
 
     private boolean isOurPhone = true;
     private void simulateTouch() {
-        Log.i(TAG, "simulateTouch");
+        Utils.logI(TAG, "simulateTouch");
         if (!isOurPhone) return;
         try {
             Process proc =Runtime.getRuntime().exec("input tap 545 2155");
@@ -350,10 +403,31 @@ public class OpenRedPacketService extends AccessibilityService {
     protected void onServiceConnected() {
         //系统成功绑定该服务时被触发,也就是当你在设置中开启相应的服务,
         // 通常我们可以在这里做一些初始化操作
-        super.onServiceConnected();
+
         mContext = this;
-        Utils.showToastView(mContext, getString(R.string.app_name) + "服务已启动，请尽情享受", Toast.LENGTH_SHORT);
+        Utils.showToastView(mContext, getString(R.string.app_name) + mContext.getString(R.string.toast_after_start), Toast.LENGTH_SHORT);
+
+        mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+        mKeyguardManager= (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
+        //mHandler.sendEmptyMessage(SHOW_IM_RUN);
+
+       // IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
+       // registerReceiver(mReceiver, filter);
+        super.onServiceConnected();
     }
+
+    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            Utils.logI(TAG, "mReceiver action: " + action);
+            if (Intent.ACTION_SCREEN_ON.equals(action)) {
+                if (mKeyguardEvent != null) {
+                    sendNotifiactionIntent(mKeyguardEvent);
+                }
+            }
+        }
+    };
 
     private void logEventType(int eventType) {
         String eventTypeName = "";
@@ -404,7 +478,7 @@ public class OpenRedPacketService extends AccessibilityService {
                 eventTypeName = "TYPE_WINDOW_CONTENT_CHANGED";
                 break;
         }
-        Log.i(TAG, "onAccessibilityEvent eventType=" + eventTypeName);
+        Utils.logI(TAG, "onAccessibilityEvent eventType=" + eventTypeName);
     }
 
 }
