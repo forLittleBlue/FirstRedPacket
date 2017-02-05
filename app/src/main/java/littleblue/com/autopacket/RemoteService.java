@@ -14,6 +14,8 @@ public class RemoteService extends Service {
     private final static String TAG = "RedPacket.RemoteService";
 
     private Context mContext;
+    public static String ACTION_DISABLE_KEYGUARD = "littleblue.action_disable_keyguard";
+    public static String ACTION_REENABLE_KEYGUARD = "littleblue.action_reensable_keyguard";
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -27,8 +29,8 @@ public class RemoteService extends Service {
         mContext = this;
 
         IntentFilter filter = new IntentFilter(OpenRedPacketService.ACTION_IS_SERVICE_RUN);
-        filter.addAction("OPEN_IN_KEYGUARD");
-        filter.addAction("REENABLE_KEYGUARD");
+        filter.addAction(ACTION_DISABLE_KEYGUARD);
+        filter.addAction(ACTION_REENABLE_KEYGUARD);
         registerReceiver(mReceiver, filter);
         return super.onStartCommand(intent, flags, startId);
     }
@@ -38,9 +40,9 @@ public class RemoteService extends Service {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             Utils.logI(TAG, "mReceiver action: " + action);
-            if ("OPEN_IN_KEYGUARD".equals(action)) {
+            if (ACTION_DISABLE_KEYGUARD.equals(action)) {
                 openInKeyguard();
-            } else if ("REENABLE_KEYGUARD".equals(action)) {
+            } else if (ACTION_REENABLE_KEYGUARD.equals(action)) {
                 mKeyguardLock.reenableKeyguard();
             }
         }

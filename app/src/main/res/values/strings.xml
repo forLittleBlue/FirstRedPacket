@@ -3,14 +3,26 @@
     <string name="description">开启即可自动抢红包</string>
     <string name="start_service">启动</string>
     <string name="restart_service">重启</string>
-    <string name="help_and_about">帮助.关于</string>
+    <string name="help_and_about">使用帮助</string>
     <string name="weixin_name">微信昵称</string>
     <string name="weixin_name_edit_hint">请输入</string>
     <string name="save">保存</string>
-    <string name="help_and_about_text">启动：在设置中"无障碍"或"辅助功能"界面开启服务。
-        \n微信昵称：本人的微信昵称，有助于抢红包准确提示。
-        \n关于：基于微信6.5.4，适用于简体中文。
-        \nBy [LittleBlue-xieqingyu]364740623 2017.1.24</string>
+    <string name="cancel">取消</string>
+    <string name="clear">删除</string>
+    <string name="wannot_group_man">不想抢</string>
+    <string name="wannot_group_add_button">添加</string>
+    <string name="input_wannot_group_list">添加不想抢的群名单</string>
+    <string name="input_wannot_man_list">添加不想抢的个人名单</string>
+    <string name="is_not_my_wanner_packet">不是小蓝想要抢的红包-_-</string>
+    <string name="help_and_about_text">1.启动：在设置中"无障碍"或"辅助功能"界面开启服务。
+        \n2.重启：出现抢红包失效的情况可以重启试一下。
+        \n3.微信昵称：本人的微信昵称，有助于抢红包准确提示。
+        \n4.不想抢：添加不想抢的群名或个人备注名，添加的个人在单聊和群聊都不会自动抢其红包（群里检测个人红包需要显示群成员昵称），添加后可点击列表进行删除。
+        \n5.锁屏抢红包：适用于无设置锁屏密码情况下，微信界面锁屏成功率更高。锁屏打开红包期间不要有任何操作，让其自动锁屏。
+        多次失效后可以杀掉应用进程再开启修复。
+        \n6.微信6.5.4简体中文下使用，其它版本可能会出现功能失效。
+        \n7.By[LittleBlue-xieqingyu]364740623 V_GT-20170126
+        \n************************仅供娱乐************************</string>
     <string name="weixin_name_saved_toast">微信昵称保存成功</string>
     <string name="toast_after_start">服务已启动，请尽情享受</string>
     <string name="toast_restart_service">在本界面关闭再开启<xliff:g id="APP_NAME">%1$s</xliff:g>的服务</string>

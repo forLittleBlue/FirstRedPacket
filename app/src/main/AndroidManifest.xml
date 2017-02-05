@@ -33,7 +33,7 @@
                 android:resource="@xml/accessbility_service_cifig" />
         </service>
 
-        <activity android:name=".EmptyActivity" />
+        <activity android:name=".WannotGroupManActivity" />
 
         <service
             android:name=".FakeService"

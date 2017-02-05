@@ -1,6 +1,7 @@
 package littleblue.com.autopacket;
 
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.view.Gravity;
@@ -19,6 +20,8 @@ public class Utils {
     private static boolean DEBUG = true;
     private static final String PRF = "LittleBlue";
     private static final String KEY_WEIXIN_NAME = "weixin_name";
+    private static final String KEY_WANNOT_GROUP_NAMES = "wnnot_group_names";
+    private static final String KEY_WANNOT_MAN_NAMES = "wnnot_man_names";
     public static final String NO_INPUT = "NO_INPUT(@-021)";
 
     public static void logI(String TAG, String msg) {
@@ -62,5 +65,39 @@ public class Utils {
         String name = pref.getString(KEY_WEIXIN_NAME, NO_INPUT);
         Log.i(TAG, "getWeiXinName: " + name);
         return name;
+    }
+
+    public static void saveWannotGroupNames(Context context, String names) {
+        Log.i(TAG, "saveWannotGroupNames: " + names);
+        SharedPreferences pref = context.getSharedPreferences(PRF, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString(KEY_WANNOT_GROUP_NAMES, names);
+        editor.commit();
+        Intent intent = new Intent(OpenRedPacketService.ACTION_UPDATE_WANNOT_LIST);
+        context.sendBroadcast(intent);
+    }
+
+    public static String getWannotGroupNames(Context context) {
+        SharedPreferences pref = context.getSharedPreferences(PRF, Context.MODE_PRIVATE);
+        String names = pref.getString(KEY_WANNOT_GROUP_NAMES, "");
+        Log.i(TAG, "getWannotGroupNames: " + names);
+        return names;
+    }
+
+    public static void saveWannotManNames(Context context, String names) {
+        Log.i(TAG, "saveWannotManNames: " + names);
+        SharedPreferences pref = context.getSharedPreferences(PRF, Context.MODE_PRIVATE);
+        SharedPreferences.Editor editor = pref.edit();
+        editor.putString(KEY_WANNOT_MAN_NAMES, names);
+        editor.commit();
+        Intent intent = new Intent(OpenRedPacketService.ACTION_UPDATE_WANNOT_LIST);
+        context.sendBroadcast(intent);
+    }
+
+    public static String getWannotManNames(Context context) {
+        SharedPreferences pref = context.getSharedPreferences(PRF, Context.MODE_PRIVATE);
+        String names = pref.getString(KEY_WANNOT_MAN_NAMES, "");
+        Log.i(TAG, "getWannotManNames: " + names);
+        return names;
     }
 }

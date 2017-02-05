@@ -71,10 +71,10 @@ public class MainActivity extends AppCompatActivity {
 
                 mAboutTextButton.setVisibility(View.VISIBLE);
                 ObjectAnimator alphaText = ObjectAnimator.ofFloat(mAboutTextButton, "alpha", 0.0f, 1.0f);
-                ObjectAnimator yText = ObjectAnimator.ofFloat(mAboutTextButton, "translationY", 500, 0);
+                ObjectAnimator yText = ObjectAnimator.ofFloat(mAboutTextButton, "translationY", 300, 0);
                 AnimatorSet set = new AnimatorSet();
                 set.play(alphaText).with(yText);
-                set.setDuration(1000).start();
+                set.setDuration(700).start();
             }
         });
 
@@ -144,6 +144,15 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+        Button wannotGroupMan = (Button) findViewById(R.id.button_wannot_group_man);
+        wannotGroupMan.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Intent intent = new Intent(mContext, WannotGroupManActivity.class);
+                startActivity(intent);
+            }
+        });
+
         startService(new Intent(this, ImplService.class));
         startService(new Intent(this, RemoteService.class));
     }
@@ -167,7 +176,7 @@ public class MainActivity extends AppCompatActivity {
         ObjectAnimator yText = ObjectAnimator.ofFloat(mAboutTextButton, "translationY", 0, 500);
         AnimatorSet set = new AnimatorSet();
         set.play(alphaText).with(yText);
-        set.setDuration(1000).start();
+        set.setDuration(700).start();
     }
 
     @Override

@@ -22,6 +22,7 @@ import android.view.accessibility.AccessibilityNodeInfo;
 import android.widget.Toast;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
@@ -31,6 +32,7 @@ public class OpenRedPacketService extends AccessibilityService {
     private Context mContext;
     private boolean isOnStateChange = false;
     private boolean isOnOpenPacket = false;
+    private boolean isOpenInKeyguard = false;
     private HashMap<String, Integer> mNodeHashMap = new HashMap<>();//不能用list
     private static AccessibilityNodeInfo  mNode;
     private int mPacketInScreenY = 0;
@@ -45,9 +47,8 @@ public class OpenRedPacketService extends AccessibilityService {
     private static String mNodeId = "0";
     public static String mWeiXinName;
     public static final String ACTION_IS_SERVICE_RUN = "littleBlue.action_is_service_run";
+    public static final String ACTION_UPDATE_WANNOT_LIST = "littleBlue.action_update_wannot_list";
     private KeyguardManager mKeyguardManager;
-    private PowerManager mPowerManager;
-    private AccessibilityEvent mKeyguardEvent;
 
     @Override
     public void onAccessibilityEvent(AccessibilityEvent event) {
@@ -77,20 +78,20 @@ public class OpenRedPacketService extends AccessibilityService {
                     //如果微信红包的提示信息,则模拟点击进入相应的聊天窗口
                     if (textString.contains("[微信红包]")) {
                         if (event.getParcelableData() != null && event.getParcelableData() instanceof Notification) {
+                            Notification notification = (Notification) event.getParcelableData();
+                            PendingIntent pendingIntent = notification.contentIntent;
                             mNodeHashMap.clear();
                             boolean isInKeyguard = mKeyguardManager.isKeyguardLocked();//判断是否为锁屏
                             if (isInKeyguard) {
                                 Utils.logI(TAG, "Notification in keyguard");
-                                mKeyguardEvent = event;
                                 isOpenInKeyguard = true;
 
-//                                openInKeyguard();
-                                Intent intent = new Intent("OPEN_IN_KEYGUARD");
+                                Intent intent = new Intent(RemoteService.ACTION_DISABLE_KEYGUARD);
                                 sendBroadcast(intent);
-                                sendNotifiactionIntent(event);
+                                sendNotifiactionIntent(pendingIntent);
                                 mHandler.sendEmptyMessageDelayed(LOCK_KEYGUARD, 3000);
                             } else {
-                                sendNotifiactionIntent(event);
+                                sendNotifiactionIntent(pendingIntent);
                             }
                         }
                     }
@@ -113,8 +114,16 @@ public class OpenRedPacketService extends AccessibilityService {
                     if (isOnOpenPacket()) {
                         mNodeHashMap.put(mNodeId, 0);
                         isOnOpenPacket = true;
+                        if (isOpenInKeyguard) {
+                            mHandler.sendEmptyMessage(LOCK_KEYGUARD);
+                        }
                     } else {
-                        mHandler.sendEmptyMessageDelayed(GLOBAL_ACTION_BACK_MSG, 2000);
+                        if (isOpenInKeyguard) {
+                            mHandler.sendEmptyMessage(GLOBAL_ACTION_BACK_MSG);
+                            mHandler.sendEmptyMessage(LOCK_KEYGUARD);
+                        } else {
+                            mHandler.sendEmptyMessageDelayed(GLOBAL_ACTION_BACK_MSG, 2000);
+                        }
                     }
                 } else if (className.equals("com.tencent.mm.plugin.luckymoney.ui.LuckyMoneyDetailUI")) {
                     if (!isOnOpenPacket) break;
@@ -135,23 +144,8 @@ public class OpenRedPacketService extends AccessibilityService {
 
     }
 
-    private boolean isOpenInKeyguard = false;
-    private void openInKeyguard() {
-        isOpenInKeyguard = true;
-        //屏幕解锁
-        KeyguardManager.KeyguardLock kl = mKeyguardManager.newKeyguardLock("unLock");
-        kl.disableKeyguard();
+    private void sendNotifiactionIntent(PendingIntent pendingIntent) {
 
-        //屏幕唤醒
-        PowerManager.WakeLock wl = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP
-                | PowerManager.SCREEN_DIM_WAKE_LOCK, "bright");
-        wl.acquire();
-        wl.release();
-    }
-
-    private void sendNotifiactionIntent(AccessibilityEvent event) {
-        Notification notification = (Notification) event.getParcelableData();
-        PendingIntent pendingIntent = notification.contentIntent;
         try {
             pendingIntent.send();
         } catch (PendingIntent.CanceledException e) {
@@ -172,13 +166,15 @@ public class OpenRedPacketService extends AccessibilityService {
                     mHandler.sendEmptyMessageDelayed(SHOW_IM_RUN, 5*DateUtils.SECOND_IN_MILLIS);
                     break;
                 case LOCK_KEYGUARD:
-                    Intent intent2 = new Intent("REENABLE_KEYGUARD");
+                    isOpenInKeyguard = false;
+                    Intent intent2 = new Intent(RemoteService.ACTION_REENABLE_KEYGUARD);
                     sendBroadcast(intent2);
                     break;
             }
         }
     };
 
+    private ArrayList<AccessibilityNodeInfo> mWannotNodeInfo = new ArrayList<>();
     private void handleEvents() {
         AccessibilityNodeInfo rootNode = getRootInActiveWindow();
         if (rootNode != null) {
@@ -193,9 +189,24 @@ public class OpenRedPacketService extends AccessibilityService {
             mNode = null;
             mPacketInScreenY = 0;
             mOpendPacketInScreenY = 0;
+            mWannotManIndex = 0;
+            mAllIndex = 0;
+            mWannotOpenIndex = 0;
+            mLastPacketStr = "";
+            isWannotGroupOrMan = false;
             findRedPacket(rootNode);
 
-            if (mNode == null) {
+            if (isWannotGroupOrMan) {
+                Utils.logI(TAG, " handleEvents isWannotGroupOrMan");
+                if (isOpenInKeyguard) {
+                    mHandler.sendEmptyMessage(LOCK_KEYGUARD);
+                }
+                if (mNode != null && mAllIndex - mWannotOpenIndex == 1) {
+                    //mWannotNodeInfo.add(mNode);
+                    Utils.showToastView(mContext, getString(R.string.is_not_my_wanner_packet), Toast.LENGTH_SHORT);
+                }
+                return;
+            } else if (mNode == null) {
                 Utils.logI(TAG, " handleEvents mNode is null");
                 return;
             }
@@ -204,7 +215,7 @@ public class OpenRedPacketService extends AccessibilityService {
             String nodeStr = mNode.toString();
             mNodeId = nodeStr.substring(49, 57);
             if (mNodeHashMap.containsKey(mNodeId) && mNodeHashMap.get(mNodeId) == mPacketInScreenY) {
-                Utils.logI(TAG, "findRedPacket this node has been added");
+                Utils.logI(TAG, "handleEvents this node has been added");
                 return;
             }
             mNodeHashMap.put(mNodeId, mPacketInScreenY);
@@ -219,8 +230,17 @@ public class OpenRedPacketService extends AccessibilityService {
                 }
                 parent = parent.getParent();
             }
+            //if (mWannotNodeInfo.contains(mNode)) mWannotNodeInfo.remove(mNode);
         }
     }
+
+    private final ArrayList<String> mWannotGroupList = new ArrayList<>();
+    private final ArrayList<String> mWannotManList = new ArrayList<>();
+    private int mWannotManIndex = 0;
+    private int mWannotOpenIndex = 0;
+    private int mAllIndex = 0;
+    private String mLastPacketStr = "";
+    private boolean isWannotGroupOrMan = false;
 
     /**
      * 递归查找当前聊天窗口中的红包信息
@@ -234,21 +254,36 @@ public class OpenRedPacketService extends AccessibilityService {
         if (node.getChildCount() == 0) {
             if (node.getText() != null) {
                 String nodeText = node.getText().toString();
-                //Utils.logI(TAG, "findRedPacket: " + nodeText);
-                if ("领取红包".equals(nodeText)) {
-                    //Utils.logI(TAG, "findRedPacket node: " + node);
-                    //String nodeStr = node.toString();
-                    //int idStart = nodeStr.indexOf("@");//48
-                    //String nodeId = nodeStr.substring(49, 57);
-                    //Utils.logI(TAG, "*******findRedPacket nodeId: " + nodeId);
-
-                    Rect outRect = new Rect();
-                    node.getBoundsInScreen(outRect);
-                    if (outRect.top > mPacketInScreenY) {
-                        mPacketInScreenY = outRect.top;
+                Utils.logI(TAG, "findRedPacket: " + nodeText);
+                mAllIndex++;
+                int index1 = nodeText.indexOf("(");
+                if (index1 > 0 && mLastPacketStr.contains("微信") && mWannotGroupList.contains(nodeText.substring(0, index1))) {
+                    //不想抢的群
+                    Utils.logI(TAG, "findRedPacket WannotGroup: " + nodeText);
+                    isWannotGroupOrMan = true;
+                } else if (mWannotManList.contains(nodeText)) {
+                    if (mLastPacketStr.contains("微信")) {
+                        //不想抢的人非群界面
+                        Utils.logI(TAG, "findRedPacket not in group WannotMan: " + nodeText);
+                        isWannotGroupOrMan = true;
+                    } else {
+                        //不想抢的人在群界面
+                        Utils.logI(TAG, "findRedPacket in group WannotMan: " + nodeText);
+                        mWannotManIndex = mAllIndex;
                     }
-                    Utils.logI(TAG, "findRedPacket packet outRect: " + outRect.toString());
-                    mNode = node;
+                } else if ("领取红包".equals(nodeText)) {
+                    mWannotOpenIndex = mAllIndex;
+                    if (mWannotManIndex > 0 && mAllIndex - mWannotManIndex == 2) {
+                        isWannotGroupOrMan = true;
+                    } else {
+                        Rect outRect = new Rect();
+                        node.getBoundsInScreen(outRect);
+                        if (outRect.top > mPacketInScreenY) {
+                            mPacketInScreenY = outRect.top;
+                        }
+                        Utils.logI(TAG, "findRedPacket packet outRect: " + outRect.toString());
+                        mNode = node;
+                    }
                 } else if(nodeText.contains("你领取了")) {
                     mNode = null;
                     Rect outRect = new Rect();
@@ -258,6 +293,7 @@ public class OpenRedPacketService extends AccessibilityService {
                     }
                     Utils.logI(TAG, "findRedPacket opend outRect: " + outRect.toString());
                 }
+                mLastPacketStr = nodeText;
             }
         } else {
             for (int i = 0; i < node.getChildCount(); i++) {
@@ -278,10 +314,6 @@ public class OpenRedPacketService extends AccessibilityService {
                 if ("android.widget.Button".equals(info.getClassName())) {
                     info.performAction(AccessibilityNodeInfo.ACTION_CLICK);//打开红包
                     isOnOpen = true;
-                    if (isOpenInKeyguard) {
-                        mHandler.sendEmptyMessage(LOCK_KEYGUARD);
-                        isOpenInKeyguard = false;
-                    }
                     break;
                 }
             }
@@ -394,6 +426,25 @@ public class OpenRedPacketService extends AccessibilityService {
         upEvent.recycle();
     }
 
+    private void updateWannotList() {
+        String mGroupNamesStr = Utils.getWannotGroupNames(mContext);
+        String mManNamesStr = Utils.getWannotManNames(mContext);
+        mWannotGroupList.clear();
+        mWannotManList.clear();
+        if (mGroupNamesStr.length() > 0) {
+            String[] strArray = mGroupNamesStr.split("`");
+            for (int i = 0; i < strArray.length; i++) {
+                mWannotGroupList.add(strArray[i]);
+            }
+        }
+        if (mManNamesStr.length() > 0) {
+            String[] strArray = mManNamesStr.split("`");
+            for (int i = 0; i < strArray.length; i++) {
+                mWannotManList.add(strArray[i]);
+            }
+        }
+    }
+
     @Override
     public void onInterrupt() {
 
@@ -407,12 +458,13 @@ public class OpenRedPacketService extends AccessibilityService {
         mContext = this;
         Utils.showToastView(mContext, getString(R.string.app_name) + mContext.getString(R.string.toast_after_start), Toast.LENGTH_SHORT);
 
-        mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
+        updateWannotList();
+
         mKeyguardManager= (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
         //mHandler.sendEmptyMessage(SHOW_IM_RUN);
 
-       // IntentFilter filter = new IntentFilter(Intent.ACTION_SCREEN_ON);
-       // registerReceiver(mReceiver, filter);
+        IntentFilter filter = new IntentFilter(ACTION_UPDATE_WANNOT_LIST);
+        registerReceiver(mReceiver, filter);
         super.onServiceConnected();
     }
 
@@ -421,10 +473,8 @@ public class OpenRedPacketService extends AccessibilityService {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             Utils.logI(TAG, "mReceiver action: " + action);
-            if (Intent.ACTION_SCREEN_ON.equals(action)) {
-                if (mKeyguardEvent != null) {
-                    sendNotifiactionIntent(mKeyguardEvent);
-                }
+            if (ACTION_UPDATE_WANNOT_LIST.equals(action)) {
+                updateWannotList();
             }
         }
     };
