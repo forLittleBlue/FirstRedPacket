@@ -10,15 +10,25 @@ public class HistoryProvider extends ContentProvider {
     private static final String TAG = "RedPacket.HistroyProvider";
 
     public static final String AUTHORITY = "com.littleblue.redpacket.history.provider";
-    public static final String HISTORY_TABLE = "history";
     public static final int HISTORY_URI_CODE = 0;
 
-    public static final Uri HISTORY_URI = Uri.parse("content://" + AUTHORITY + "/" + HISTORY_TABLE);
+    public static final Uri HISTORY_URI = Uri.parse("content://" + AUTHORITY + "/" + DbOpenHelper.HISTORY_TABLE_NAME);
 
     private static final UriMatcher sUriMatcher = new UriMatcher(UriMatcher.NO_MATCH);
 
     static {
-        sUriMatcher.addURI(AUTHORITY, HISTORY_TABLE, HISTORY_URI_CODE);//关联表和uri code
+        sUriMatcher.addURI(AUTHORITY, DbOpenHelper.HISTORY_TABLE_NAME, HISTORY_URI_CODE);//关联表和uri code
+    }
+
+    private String getTableName(Uri uri) {
+        String tableName = null;
+        switch (sUriMatcher.match(uri)) {
+            case HISTORY_URI_CODE:
+                tableName = DbOpenHelper.HISTORY_TABLE_NAME;
+                break;
+            default: break;
+        }
+        return tableName;
     }
 
     @Override
