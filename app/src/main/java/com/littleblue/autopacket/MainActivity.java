@@ -1,9 +1,10 @@
-package littleblue.com.autopacket;
+package com.littleblue.autopacket;
 
 import android.animation.AnimatorSet;
 import android.animation.ObjectAnimator;
 import android.content.Context;
 import android.content.Intent;
+import android.net.Uri;
 import android.provider.Settings;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -188,6 +189,10 @@ public class MainActivity extends AppCompatActivity {
         } else {
             mStartButton.setText(getString(R.string.start_service));
         }
+
+        Uri uri = Uri.parse("content://com.littleblue.redpacket.history.provider");
+        getContentResolver().query(uri, null, null, null, null);
+
     }
 
     private boolean getServiceIsEnabled() {

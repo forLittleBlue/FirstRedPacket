@@ -5,7 +5,7 @@
     android:layout_width="@dimen/toast_view_width"
     android:layout_height="@dimen/toast_view_heiht">
 
-    <littleblue.com.autopacket.OvalView
+    <com.littleblue.autopacket.OvalView
         android:id="@+id/oval_view"
         android:alpha="0.55"
         android:layout_width="@dimen/toast_view_width"

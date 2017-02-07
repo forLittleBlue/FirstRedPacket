@@ -1,4 +1,4 @@
-package littleblue.com.autopacket;
+package com.littleblue.autopacket;
 
 import android.accessibilityservice.AccessibilityService;
 import android.app.KeyguardManager;
@@ -11,10 +11,8 @@ import android.content.IntentFilter;
 import android.graphics.Rect;
 import android.os.Handler;
 import android.os.Message;
-import android.os.PowerManager;
 import android.os.SystemClock;
 import android.text.format.DateUtils;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.accessibility.AccessibilityEvent;
@@ -42,6 +40,13 @@ public class OpenRedPacketService extends AccessibilityService {
     private final int GLOBAL_ACTION_BACK_MSG = 1;
     private final int SHOW_IM_RUN = 2;
     private final int LOCK_KEYGUARD = 3;
+    private final ArrayList<String> mWannotGroupList = new ArrayList<>();
+    private final ArrayList<String> mWannotManList = new ArrayList<>();
+    private int mWannotManIndex = 0;
+    private int mWannotOpenIndex = 0;
+    private int mAllIndex = 0;
+    private String mLastPacketStr = "";
+    private boolean isWannotGroupOrMan = false;
     private String mLastResultText = "";
     private PacketResultInfo mPacketResultInfo;
     private static String mNodeId = "0";
@@ -174,7 +179,6 @@ public class OpenRedPacketService extends AccessibilityService {
         }
     };
 
-    private ArrayList<AccessibilityNodeInfo> mWannotNodeInfo = new ArrayList<>();
     private void handleEvents() {
         AccessibilityNodeInfo rootNode = getRootInActiveWindow();
         if (rootNode != null) {
@@ -230,17 +234,8 @@ public class OpenRedPacketService extends AccessibilityService {
                 }
                 parent = parent.getParent();
             }
-            //if (mWannotNodeInfo.contains(mNode)) mWannotNodeInfo.remove(mNode);
         }
     }
-
-    private final ArrayList<String> mWannotGroupList = new ArrayList<>();
-    private final ArrayList<String> mWannotManList = new ArrayList<>();
-    private int mWannotManIndex = 0;
-    private int mWannotOpenIndex = 0;
-    private int mAllIndex = 0;
-    private String mLastPacketStr = "";
-    private boolean isWannotGroupOrMan = false;
 
     /**
      * 递归查找当前聊天窗口中的红包信息

@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="littleblue.com.autopacket">
+    package="com.littleblue.autopacket">
 
     <uses-permission android:name="android.permission.DISABLE_KEYGUARD" />
     <uses-permission android:name="android.permission.WAKE_LOCK" />
@@ -45,9 +45,15 @@
             android:exported="true" />
         <service
             android:name=".RemoteService"
-            android:process=":remote"
             android:enabled="true"
-            android:exported="true"></service>
+            android:exported="true"
+            android:process=":remote" />
+
+        <provider
+            android:name=".HistoryProvider"
+            android:authorities="com.littleblue.redpacket.history.provider"
+            android:enabled="true"
+            android:exported="true"></provider>
     </application>
 
 </manifest>

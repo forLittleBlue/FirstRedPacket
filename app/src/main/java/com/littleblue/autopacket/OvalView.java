@@ -1,4 +1,4 @@
-package littleblue.com.autopacket;
+package com.littleblue.autopacket;
 
 import android.content.Context;
 import android.content.res.TypedArray;

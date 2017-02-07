@@ -1,4 +1,4 @@
-package littleblue.com.autopacket;
+package com.littleblue.autopacket;
 
 import android.app.Notification;
 import android.app.Service;

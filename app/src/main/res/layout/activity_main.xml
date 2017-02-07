@@ -6,7 +6,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:paddingTop="@dimen/activity_vertical_margin"
-    tools:context="littleblue.com.autopacket.MainActivity">
+    tools:context="com.littleblue.autopacket.MainActivity">
 
     <RelativeLayout
         android:layout_width="110dp"
@@ -28,7 +28,7 @@
             android:textSize="30dp"
             style="@style/Widget.AppCompat.Button.Borderless" />
 
-        <littleblue.com.autopacket.OvalView
+        <com.littleblue.autopacket.OvalView
             android:id="@+id/oval_view"
             android:alpha="0.45"
             android:foregroundGravity="center"
@@ -120,7 +120,7 @@
             android:enabled="false"
             style="@style/Widget.AppCompat.Button.Borderless" />
 
-        <littleblue.com.autopacket.OvalView
+        <com.littleblue.autopacket.OvalView
             android:alpha="0.45"
             android:foregroundGravity="center"
             android:layout_marginTop="5dp"
@@ -151,7 +151,7 @@
             android:textSize="26dp"
             style="@style/Widget.AppCompat.Button.Borderless" />
 
-        <littleblue.com.autopacket.OvalView
+        <com.littleblue.autopacket.OvalView
             android:alpha="0.45"
             android:foregroundGravity="center"
             android:layout_marginTop="5dp"

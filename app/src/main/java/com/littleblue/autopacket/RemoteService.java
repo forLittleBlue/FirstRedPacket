@@ -1,7 +1,6 @@
-package littleblue.com.autopacket;
+package com.littleblue.autopacket;
 
 import android.app.KeyguardManager;
-import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
@@ -9,20 +8,17 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.os.Handler;
 import android.os.IBinder;
-import android.os.Message;
 import android.os.PowerManager;
 import android.support.v4.app.NotificationCompat;
 import android.text.format.DateUtils;
-import android.util.Log;
 
-public class ImplService extends Service {
-    private static String TAG = "RedPacket.ImplService";
+public class RemoteService extends Service {
+    private final static String TAG = "RedPacket.RemoteService";
 
     private Context mContext;
-    private long mReceiverTime = -1;
-    private static final int MSG_RECEIVED_IS_SERVICE_RUN = 1;
+    public static String ACTION_DISABLE_KEYGUARD = "littleblue.action_disable_keyguard";
+    public static String ACTION_REENABLE_KEYGUARD = "littleblue.action_reensable_keyguard";
 
     @Override
     public IBinder onBind(Intent intent) {
@@ -33,13 +29,12 @@ public class ImplService extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         Utils.logI(TAG, "onStartCommand");
-        startForeground(FakeService.NOTIFY_ID, new Notification());
-        startService(new Intent(this, FakeService.class));
         mContext = this;
 
-//        IntentFilter filter = new IntentFilter(OpenRedPacketService.ACTION_IS_SERVICE_RUN);
-//        filter.addAction("OPEN_IN_KEYGUARD");
-//        registerReceiver(mReceiver, filter);
+        IntentFilter filter = new IntentFilter(OpenRedPacketService.ACTION_IS_SERVICE_RUN);
+        filter.addAction(ACTION_DISABLE_KEYGUARD);
+        filter.addAction(ACTION_REENABLE_KEYGUARD);
+        registerReceiver(mReceiver, filter);
         return super.onStartCommand(intent, flags, startId);
     }
 
@@ -48,25 +43,23 @@ public class ImplService extends Service {
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
             Utils.logI(TAG, "mReceiver action: " + action);
-            if (OpenRedPacketService.ACTION_IS_SERVICE_RUN.equals(action)) {
-                if (mReceiverTime < 0) {
-                    mHandler.sendEmptyMessageDelayed(MSG_RECEIVED_IS_SERVICE_RUN, 5*DateUtils.SECOND_IN_MILLIS);
-                }
-                mReceiverTime = System.currentTimeMillis();
-            } else if ("OPEN_IN_KEYGUARD".equals(action)) {
+            if (ACTION_DISABLE_KEYGUARD.equals(action)) {
                 openInKeyguard();
+            } else if (ACTION_REENABLE_KEYGUARD.equals(action)) {
+                mKeyguardLock.reenableKeyguard();
             }
         }
     };
 
     private KeyguardManager mKeyguardManager;
     private PowerManager mPowerManager;
+    KeyguardManager.KeyguardLock mKeyguardLock;
     private void openInKeyguard() {
         mPowerManager = (PowerManager) mContext.getSystemService(Context.POWER_SERVICE);
         mKeyguardManager= (KeyguardManager) mContext.getSystemService(Context.KEYGUARD_SERVICE);
         //屏幕解锁
-        KeyguardManager.KeyguardLock kl = mKeyguardManager.newKeyguardLock("unLock");
-        kl.disableKeyguard();
+        mKeyguardLock = mKeyguardManager.newKeyguardLock("unLock");
+        mKeyguardLock.disableKeyguard();
 
         //屏幕唤醒
         PowerManager.WakeLock wl = mPowerManager.newWakeLock(PowerManager.ACQUIRE_CAUSES_WAKEUP
@@ -74,21 +67,6 @@ public class ImplService extends Service {
         wl.acquire();
         wl.release();
     }
-
-    private Handler mHandler = new Handler() {
-        @Override
-        public void dispatchMessage(Message msg) {
-            switch (msg.what) {
-                case MSG_RECEIVED_IS_SERVICE_RUN:
-                    if (System.currentTimeMillis() - mReceiverTime > 10* DateUtils.SECOND_IN_MILLIS) {
-                        Utils.logI(TAG, "OpenRedPacketService is not run");
-                        sendNotification();
-                    }
-                    mHandler.sendEmptyMessageDelayed(MSG_RECEIVED_IS_SERVICE_RUN, 5*DateUtils.SECOND_IN_MILLIS);
-                    break;
-            }
-        }
-    };
 
     private void sendNotification() {
         NotificationManager notifyManager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
